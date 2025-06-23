@@ -1,0 +1,58 @@
+---
+- name: Install New Relic Infrastructure Agent
+  hosts: aws_servers # This refers to the group defined in your inventory.ini
+  become: yes          # This allows Ansible to use sudo on the target machines
+  vars:
+    # IMPORTANT: Replace with your actual New Relic License Key
+    newrelic_license_key: "NRAK-3LH3LXH88T3PPAVB0UD85KJHF60"
+    newrelic_infra_package_name: "newrelic-infra"
+    newrelic_infra_config_file: "/etc/newrelic-infra.yml"
+    region: ap-southeast-2
+    ansible_python_interpreter: /usr/bin/python3
+
+  tasks:
+    - name: Install prerequisites
+      dnf:
+        name:
+          - curl-minimal
+          - gnupg2-minimal
+          - ca-certificates
+        state: present
+
+    - name: Add New Relic Infrastructure Agent repository
+      get_url:
+        url: "https://download.newrelic.com/infrastructure_agent/linux/yum/el/7/x86_64/newrelic-infra.repo"
+        dest: "/etc/yum.repos.d/newrelic-infra.repo"
+        mode: 0644
+
+    - name: Import New Relic GPG key
+      rpm_key:
+        key: "https://download.newrelic.com/infrastructure_agent/gpg/newrelic-infra.gpg"
+        state: present
+
+    - name: Install New Relic Infrastructure Agent
+      dnf:
+        name: "{{ newrelic_infra_package_name }}"
+        state: present
+        update_cache: yes
+
+    - name: Configure New Relic Infrastructure Agent
+      template:
+        src: newrelic-infra.yml.j2
+        dest: "{{ newrelic_infra_config_file }}"
+        owner: root
+        group: root
+        mode: 0644
+      notify: restart newrelic-infra
+
+    - name: Ensure New Relic Infrastructure Agent is running and enabled
+      service:
+        name: newrelic-infra
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: restart newrelic-infra
+      service:
+        name: newrelic-infra
+        state: restarted
