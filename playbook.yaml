@@ -4,7 +4,7 @@
   become: yes          # This allows Ansible to use sudo on the target machines
   vars:
     # IMPORTANT: Replace with your actual New Relic License Key
-    newrelic_license_key: "NRAK-3LH3LXH88T3PPAVB0UD85KJHF60"
+    newrelic_license_key: "XXXXXX"
     newrelic_infra_package_name: "newrelic-infra"
     newrelic_infra_config_file: "/etc/newrelic-infra.yml"
     region: ap-southeast-2
